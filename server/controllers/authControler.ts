@@ -100,19 +100,28 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-//Get user profile
-//GET /api/auth/me
-//@access Private
-export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
-    try{
-        if(req.user){
-            res.status(400).json({ message : "Not authorized"})
+// Get user profile
+// GET /api/auth/me
+// @access Private
+export const getMe = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({
+                message: "Not authorized",
+            });
             return;
         }
-        res.json(req.user)
-    } catch(error: any){
-        console.error(error);
-        res.status(400).json({ message: error.message });
-    } 
-}
+
+        res.status(200).json(req.user);
+    } catch (error: any) {
+        console.error("Get Me Error:", error);
+
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
 

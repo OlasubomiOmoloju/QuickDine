@@ -1,21 +1,41 @@
-import { response, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.js";
 import { Restaurant } from "../models/Restaurant.js";
-import {v2 as cloudinary} from 'cloudinary'
+import cloudinary from "../config/cloudinary.js";
 import { Booking } from "../models/Booking.js";
 
 
 //Helper function to upload to cloudinary
-const uploadToCloudinary = (fileBuffer: Buffer) : Promise<{secure_url: string}> =>{
-    return new Promise((resolve, reject)=>{
-        const stream = cloudinary.uploader.upload_stream({folder: "QuickDine"}, (error, result)=>{
-            if(error) return reject(error);
-            if(!result) return reject(new Error("Upload failed"));
-            resolve({secure_url: result.secure_url})
-        })
-        stream.end(fileBuffer)
-    })
-}
+const uploadToCloudinary = (
+    fileBuffer: Buffer
+): Promise<{ secure_url: string }> => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: "QuickDine" },
+            (error, result) => {
+                if (error) {
+                    console.error("❌ CLOUDINARY ERROR FROM OWNER CONTROLLER:");
+                    console.error(error);
+                    return reject(error);
+                }
+
+                if (!result) {
+                    console.error("❌ Cloudinary returned no result");
+                    return reject(new Error("Upload failed"));
+                }
+
+                console.log("✅ RESTAURANT IMAGE UPLOADED:");
+                console.log(result.secure_url);
+
+                resolve({
+                    secure_url: result.secure_url,
+                });
+            }
+        );
+
+        stream.end(fileBuffer);
+    });
+};
 
 //Get owner controller
 //GET /api/owner/restaurant
@@ -51,7 +71,7 @@ export const createOwnerRestaurant = async (req: AuthRequest, res: Response): Pr
         }
 
         //Generate slug from name
-        const slug = name.toLowerCase().replace(/[a^-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 
         const slugExists = await Restaurant.findOne({slug});
         if(slugExists){
@@ -61,10 +81,15 @@ export const createOwnerRestaurant = async (req: AuthRequest, res: Response): Pr
 
         //Handle image
         let  imageUrl = "";
-        if(req.file){
-            const result = await uploadToCloudinary(req.file.buffer);
-            imageUrl = result.secure_url;
-        }
+        if (req.file) {
+    console.log("IMAGE RECEIVED:", req.file.originalname);
+    
+    const result = await uploadToCloudinary(req.file.buffer);
+    
+    console.log("CLOUDINARY UPLOAD SUCCESS:", result.secure_url);
+    
+    imageUrl = result.secure_url;
+}
 
         //Setup parsed tags and slots
         const parsedTags = typeof tags === "string" ? tags.split(",").map((t)=> t.trim()): tags || [];

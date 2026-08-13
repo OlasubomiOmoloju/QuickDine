@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Calendar, Users } from "lucide-react";
+import { getLocalDateString } from "../../lib/utils.ts";
+
 
 interface BookingWidgetProps {
     restaurant: any;
@@ -63,7 +65,7 @@ export default function BookingWidget({
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            min={new Date().toISOString().split("T")[0]}
+                            min={getLocalDateString()}
                             className="w-full bg-surface-container-low/30 pl-9 pr-3 py-2.5 text-xs border border-outline-variant/40 focus:border-secondary focus:outline-none rounded-md cursor-pointer"
                         />
                     </div>
@@ -79,7 +81,7 @@ export default function BookingWidget({
                             </div>
                         ) : (
                             (() => {
-                                const todayStr = new Date().toISOString().split("T")[0];
+                                const todayStr = getLocalDateString();
                                 const isToday = selectedDate === todayStr;
                                 const allSlots =
                                     slotsAvailability.length > 0
@@ -89,7 +91,7 @@ export default function BookingWidget({
                                               availableSeats: 20,
                                               isAvailable: true,
                                           }));
-                                return allSlots.filter((slotInfo: any) => {
+                                const filteredSlots = allSlots.filter((slotInfo: any) => {
                                     if (!isToday) return true;
                                     const [slotHour, slotMinute] = slotInfo.time.split(":").map(Number);
                                     const now = new Date();
@@ -97,29 +99,39 @@ export default function BookingWidget({
                                     const currentMinute = now.getMinutes();
                                     return slotHour > currentHour || (slotHour === currentHour && slotMinute > currentMinute);
                                 });
-                            })().map((slotInfo: any) => {
-                                const slot = slotInfo.time;
-                                const isSelected = selectedSlot === slot;
-                                const isFull = !slotInfo.isAvailable || slotInfo.availableSeats < Number(selectedGuests);
-                                return (
-                                    <button
-                                        key={slot}
-                                        type="button"
-                                        disabled={isFull}
-                                        onClick={() => setSelectedSlot(slot)}
-                                        className={`py-2 px-1 text-center text-[10px] font-medium tracking-wider uppercase border transition-all rounded-sm ${
-                                            isSelected
-                                                ? "bg-secondary border-secondary text-white shadow-sm cursor-pointer"
-                                                : isFull
-                                                  ? "bg-black/5 border-outline-variant/10 text-black/25 cursor-not-allowed opacity-50"
-                                                  : "border-outline-variant/40 text-black/55 hover:border-primary hover:text-primary cursor-pointer"
-                                        }`}
-                                    >
-                                        {slot}
-                                        {isFull && <span className="block text-[8px] text-error uppercase mt-0.5">Full</span>}
-                                    </button>
-                                );
-                            })
+
+                                if (filteredSlots.length === 0) {
+                                    return (
+                                        <div className="col-span-3 py-6 px-4 text-center text-xs text-black/55 bg-black/[0.02] border border-dashed border-outline-variant/30 rounded-md">
+                                            No reservation times remaining for today. Please select a future date.
+                                        </div>
+                                    );
+                                }
+
+                                return filteredSlots.map((slotInfo: any) => {
+                                    const slot = slotInfo.time;
+                                    const isSelected = selectedSlot === slot;
+                                    const isFull = !slotInfo.isAvailable || slotInfo.availableSeats < Number(selectedGuests);
+                                    return (
+                                        <button
+                                            key={slot}
+                                            type="button"
+                                            disabled={isFull}
+                                            onClick={() => setSelectedSlot(slot)}
+                                            className={`py-2 px-1 text-center text-[10px] font-medium tracking-wider uppercase border transition-all rounded-sm ${
+                                                isSelected
+                                                    ? "bg-secondary border-secondary text-white shadow-sm cursor-pointer"
+                                                    : isFull
+                                                      ? "bg-black/5 border-outline-variant/10 text-black/25 cursor-not-allowed opacity-50"
+                                                      : "border-outline-variant/40 text-black/55 hover:border-primary hover:text-primary cursor-pointer"
+                                            }`}
+                                        >
+                                            {slot}
+                                            {isFull && <span className="block text-[8px] text-error uppercase mt-0.5">Full</span>}
+                                        </button>
+                                    );
+                                });
+                            })()
                         )}
                     </div>
                 </div>
