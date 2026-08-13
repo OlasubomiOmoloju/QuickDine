@@ -9,6 +9,6 @@ adminRouter.use(adminOnly)
 
 adminRouter.get("/restaurants", getAllRestaurants)
 adminRouter.put("/restaurants/:id/approve", approveRestaurant)
-adminRouter.put("/stats", getAdminStats)
+adminRouter.get("/stats", getAdminStats)
 
 export default adminRouter

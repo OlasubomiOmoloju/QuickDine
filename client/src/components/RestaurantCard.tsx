@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Star, MapPinIcon } from "lucide-react";
 import { dummyRating } from "../assets/assets.ts";
+import { getLocalDateString } from "../lib/utils.ts";
+
 
 interface RestaurantCardProps {
     restaurant: {
@@ -25,7 +27,7 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
     const handleSlotClick = (e: React.MouseEvent, slot: string) => {
         e.preventDefault();
         e.stopPropagation();
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDateString();
         // Redirect to booking details confirmation with slot and today's date pre-selected
         navigate(`/booking/${restaurant.slug}?slot=${slot}&date=${today}`);
     };
